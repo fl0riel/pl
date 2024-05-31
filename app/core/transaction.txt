@@ -1,0 +1,21 @@
+    public function transaction_create($array, $cp, $ville)
+    {
+        $db = DB::getPdo();
+        // on prévient qu'il va y avoir plusieurs requêtes simultanées
+        $db->beginTransaction();
+
+        // on teste les requêtes et intercepte les erreurs
+        try {
+            $ville_id = $this->selectOrInsert($cp, $ville);
+            $client = $this->create($array, $ville_id);
+            $id = $this->getId($array);
+
+            // Commit les 3 requêtes
+            $db->commit();
+        } catch (\Exception $e) {
+            // Si il y a une erreur, annule les 3 requêtes en revenant en arrière
+            $db->rollback();
+        }
+        $data = [$client, $id];
+        return $data;
+    }
